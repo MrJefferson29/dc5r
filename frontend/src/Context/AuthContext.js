@@ -18,7 +18,7 @@ const AuthContextProvider = props => {
   // Shared Axios instance pointing at backend API
   const api = axios.create({
     // Prefer env var, fall back to local backend
-    baseURL: "https://equine-excellence.onrender.com/api",
+    baseURL: "https://dc5r.onrender.com/api",
   });
 
   const logout = () => {

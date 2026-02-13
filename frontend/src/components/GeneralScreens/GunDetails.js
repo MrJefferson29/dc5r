@@ -35,13 +35,13 @@ export default function PartDetails() {
       setLoading(true);
       try {
         // Fetching by slug as defined in your Mongoose schema
-        const { data } = await axios.get(`https://equine-excellence.onrender.com/api/horses/${name}`);
+        const { data } = await axios.get(`https://dc5r.onrender.com/api/horses/${name}`);
         
         if (data) {
           setItem(data);
 
           // Fetch related items safely using the category from the returned item
-          const allRes = await axios.get("https://equine-excellence.onrender.com/api/horses");
+          const allRes = await axios.get("https://dc5r.onrender.com/api/horses");
           const all = Array.isArray(allRes.data) ? allRes.data : [];
           
           const related = all.filter(

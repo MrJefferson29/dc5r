@@ -15,7 +15,7 @@ export default function AllHorses() {
   useEffect(() => {
     const fetchHorses = async () => {
       try {
-        const { data } = await axios.get('https://equine-excellence.onrender.com/api/horses');
+        const { data } = await axios.get('https://dc5r.onrender.com/api/horses');
         setAllHorses(data);
         const queryParams = new URLSearchParams(location.search);
         const categoryFromQuery = queryParams.get('category') || 'All';
