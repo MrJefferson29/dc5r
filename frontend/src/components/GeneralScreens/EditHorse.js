@@ -3,6 +3,11 @@ import styled from "styled-components";
 import { useNavigate, useParams } from "react-router-dom";
 import { AuthContext } from "../../Context/AuthContext";
 import { FiSave, FiImage, FiBarChart2, FiInfo } from "react-icons/fi";
+import {
+  INVENTORY_MAIN_CATEGORIES,
+  SUBCATEGORIES_BY_MAIN,
+  hasSubcategories,
+} from "../../constants/inventoryCategories";
 
 const EditHorse = () => {
   const { api, token } = useContext(AuthContext);
@@ -12,6 +17,7 @@ const EditHorse = () => {
   const [form, setForm] = useState({
     name: "",
     category: "",
+    subcategory: "",
     price: "",
     description: "",
     componentType: "",
@@ -28,10 +34,11 @@ const EditHorse = () => {
   useEffect(() => {
     const fetchHorse = async () => {
       try {
-        const { data } = await api.get(`https://dc5r.onrender.com/api/horses/${slugParam}`);
+        const { data } = await api.get(`/horses/${encodeURIComponent(slugParam)}`);
         setForm({
           name: data.name || "",
           category: data.category || "",
+          subcategory: data.subcategory || "",
           price: data.price || "",
           description: data.description || "",
           componentType: data.componentType || "",
@@ -53,8 +60,15 @@ const EditHorse = () => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setForm((prev) => ({ ...prev, [name]: value }));
+    setForm((prev) => {
+      const next = { ...prev, [name]: value };
+      if (name === "category") next.subcategory = "";
+      return next;
+    });
   };
+
+  const subcategoryOptions = form.category ? (SUBCATEGORIES_BY_MAIN[form.category] || []) : [];
+  const showSubcategory = form.category && hasSubcategories(form.category);
 
   const handleImagesChange = (e) => {
     setImages(Array.from(e.target.files || []));
@@ -77,15 +91,14 @@ const EditHorse = () => {
         fd.append("images", file);
       });
 
-        const { data } = await api.put(`https://dc5r.onrender.com/api/horses/${slugParam}`, fd, {
+        const { data } = await api.put(`/horses/${encodeURIComponent(slugParam)}`, fd, {
         headers: {
-          "Content-Type": "multipart/form-data",
           authorization: `Bearer ${token || localStorage.getItem("authToken")}`,
         },
       });
 
       const slug = data.slug || data.name.replace(/\s+/g, "-").toLowerCase();
-      navigate(`/pet/${slug}`);
+      navigate(`/pet/${encodeURIComponent(slug)}`);
     } catch (err) {
       console.error("Error updating horse", err);
       setError(
@@ -121,29 +134,35 @@ const EditHorse = () => {
             <input name="name" type="text" required value={form.name} onChange={handleChange} />
           </div>
           <div className="field">
-            <label>Category</label>
+            <label>Main Category</label>
             <select name="category" required value={form.category} onChange={handleChange}>
-              <option value="Engine & Drivetrain">Engine &amp; Drivetrain</option>
-              <option value="Body & Exterior">Body &amp; Exterior</option>
-              <option value="Interior & Comfort">Interior &amp; Comfort</option>
-              <option value="Electrical & Lighting">Electrical &amp; Lighting</option>
-              <option value="Wheels & Tires">Wheels &amp; Tires</option>
-              <option value="Performance Upgrades">Performance Upgrades</option>
+              <option value="">Select main category</option>
+              {INVENTORY_MAIN_CATEGORIES.map((cat) => (
+                <option key={cat} value={cat}>{cat}</option>
+              ))}
             </select>
           </div>
+          {showSubcategory && (
+            <div className="field">
+              <label>Subcategory</label>
+              <select name="subcategory" required value={form.subcategory} onChange={handleChange}>
+                <option value="">Select subcategory</option>
+                {subcategoryOptions.map((sub) => (
+                  <option key={sub} value={sub}>{sub}</option>
+                ))}
+              </select>
+            </div>
+          )}
         </div>
 
         <div className="grid-3">
           <div className="field">
-            <label>Component Type</label>
-            <select name="componentType" required value={form.componentType} onChange={handleChange}>
-              <option value="interior">Interior</option>
-              <option value="exterior">Exterior</option>
-            </select>
-          </div>
-          <div className="field">
             <label>Condition</label>
-            <input name="condition" type="text" required value={form.condition} onChange={handleChange} />
+            <select name="condition" required value={form.condition} onChange={handleChange}>
+              <option value="">Select condition</option>
+              <option value="new">New</option>
+              <option value="used">Used</option>
+            </select>
           </div>
           <div className="field">
             <label>Price</label>

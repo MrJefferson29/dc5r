@@ -4,9 +4,11 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import logo from '../../Assets/logo.png';
 import Navbar from './Navbar';
 import { AuthContext } from "../../Context/AuthContext";
+import { INVENTORY_MAIN_CATEGORIES } from "../../constants/inventoryCategories";
 
 export default function Header() {
   const [isMobile, setIsMobile] = useState(false);
+  const [inventoryOpen, setInventoryOpen] = useState(false);
   const { activeUser, logout } = useContext(AuthContext);
   const navigate = useNavigate();
   const location = useLocation();
@@ -34,7 +36,34 @@ export default function Header() {
         {!isMobile && (
           <div className="desktop-links">
             <Link className={`nav-link ${location.pathname === '/' ? 'active' : ''}`} to="/">Home</Link>
-            <Link className={`nav-link ${location.pathname === '/all-pets' ? 'active' : ''}`} to="/all-pets">Inventory</Link>
+            <div
+              className="nav-dropdown-wrap"
+              onMouseEnter={() => setInventoryOpen(true)}
+              onMouseLeave={() => setInventoryOpen(false)}
+            >
+              <button
+                type="button"
+                className={`nav-link nav-dropdown-trigger ${location.pathname === '/all-pets' ? 'active' : ''}`}
+                onClick={() => navigate('/all-pets')}
+              >
+                Inventory ▾
+              </button>
+              {inventoryOpen && (
+                <div className="nav-dropdown">
+                  <Link className="nav-dropdown-item" to="/all-pets" onClick={() => setInventoryOpen(false)}>All inventory</Link>
+                  {INVENTORY_MAIN_CATEGORIES.map((cat) => (
+                    <Link
+                      key={cat}
+                      className="nav-dropdown-item"
+                      to={`/all-pets?category=${encodeURIComponent(cat)}`}
+                      onClick={() => setInventoryOpen(false)}
+                    >
+                      {cat}
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </div>
             <Link className={`nav-link ${location.pathname === '/about' ? 'active' : ''}`} to="/about">Specs</Link>
             <Link className={`nav-link ${location.pathname === '/contact-us' ? 'active' : ''}`} to="/contact-us">Contact</Link>
             
@@ -135,11 +164,52 @@ const HeaderStyles = styled.header`
       text-transform: uppercase;
       letter-spacing: 1.5px;
       transition: 0.2s;
+      background: none;
+      border: none;
+      cursor: pointer;
 
       &:hover, &.active {
         color: #111;
         padding-bottom: 4px;
         border-bottom: 3px solid #cc0000;
+      }
+    }
+
+    .nav-dropdown-wrap {
+      position: relative;
+    }
+
+    .nav-dropdown-trigger {
+      display: flex;
+      align-items: center;
+    }
+
+    .nav-dropdown {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      margin-top: 4px;
+      min-width: 220px;
+      background: #111;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+      padding: 0.5rem 0;
+      z-index: 100;
+    }
+
+    .nav-dropdown-item {
+      display: block;
+      padding: 0.6rem 1.2rem;
+      font-size: 0.8rem;
+      font-weight: 800;
+      color: #fff;
+      text-decoration: none;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      transition: 0.2s;
+
+      &:hover {
+        background: #cc0000;
+        color: #fff;
       }
     }
   }

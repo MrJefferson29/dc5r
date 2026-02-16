@@ -3,6 +3,11 @@ import styled from "styled-components";
 import { useNavigate } from "react-router-dom";
 import { AuthContext } from "../../Context/AuthContext";
 import { FiUploadCloud, FiAlertCircle } from "react-icons/fi";
+import {
+  INVENTORY_MAIN_CATEGORIES,
+  SUBCATEGORIES_BY_MAIN,
+  hasSubcategories,
+} from "../../constants/inventoryCategories";
 
 const UploadHorse = () => {
   const { api, token } = useContext(AuthContext);
@@ -11,6 +16,7 @@ const UploadHorse = () => {
   const [form, setForm] = useState({
     name: "",
     category: "",
+    subcategory: "",
     price: "",
     description: "",
     componentType: "",
@@ -23,8 +29,17 @@ const UploadHorse = () => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setForm((prev) => ({ ...prev, [name]: value }));
+    setForm((prev) => {
+      const next = { ...prev, [name]: value };
+      if (name === "category") {
+        next.subcategory = "";
+      }
+      return next;
+    });
   };
+
+  const subcategoryOptions = form.category ? (SUBCATEGORIES_BY_MAIN[form.category] || []) : [];
+  const showSubcategory = form.category && hasSubcategories(form.category);
 
   const handleImagesChange = (e) => {
     setImages(Array.from(e.target.files || []));
@@ -47,13 +62,12 @@ const UploadHorse = () => {
 
       const { data } = await api.post("/horses", fd, {
         headers: {
-          "Content-Type": "multipart/form-data",
           authorization: `Bearer ${token || localStorage.getItem("authToken")}`,
         },
       });
 
       const slug = data.slug || data.name.replace(/\s+/g, "-").toLowerCase();
-      navigate(`/pet/${slug}`);
+      navigate(`/pet/${encodeURIComponent(slug)}`);
     } catch (err) {
       console.error("Error uploading horse", err);
       setError(
@@ -89,7 +103,7 @@ const UploadHorse = () => {
           </div>
 
           <div className="field">
-            <label htmlFor="category">Category</label>
+            <label htmlFor="category">Main Category</label>
             <select
               id="category"
               name="category"
@@ -97,44 +111,47 @@ const UploadHorse = () => {
               value={form.category}
               onChange={handleChange}
             >
-              <option value="">Select Category</option>
-              <option value="Engine & Drivetrain">Engine &amp; Drivetrain</option>
-              <option value="Body & Exterior">Body &amp; Exterior</option>
-              <option value="Interior & Comfort">Interior &amp; Comfort</option>
-              <option value="Electrical & Lighting">Electrical &amp; Lighting</option>
-              <option value="Wheels & Tires">Wheels &amp; Tires</option>
-              <option value="Performance Upgrades">Performance Upgrades</option>
+              <option value="">Select main category</option>
+              {INVENTORY_MAIN_CATEGORIES.map((cat) => (
+                <option key={cat} value={cat}>{cat}</option>
+              ))}
             </select>
           </div>
+
+          {showSubcategory && (
+            <div className="field">
+              <label htmlFor="subcategory">Subcategory</label>
+              <select
+                id="subcategory"
+                name="subcategory"
+                required
+                value={form.subcategory}
+                onChange={handleChange}
+              >
+                <option value="">Select subcategory</option>
+                {subcategoryOptions.map((sub) => (
+                  <option key={sub} value={sub}>{sub}</option>
+                ))}
+              </select>
+            </div>
+          )}
         </div>
 
         <div className="grid-3">
-          <div className="field">
-            <label htmlFor="componentType">Component Type</label>
-            <select
-              id="componentType"
-              name="componentType"
-              required
-              value={form.componentType}
-              onChange={handleChange}
-            >
-              <option value="">Select</option>
-              <option value="interior">Interior</option>
-              <option value="exterior">Exterior</option>
-            </select>
-          </div>
 
           <div className="field">
             <label htmlFor="condition">Condition</label>
-            <input
+            <select
               id="condition"
               name="condition"
-              type="text"
               required
               value={form.condition}
               onChange={handleChange}
-              placeholder="e.g. New, Used - like new"
-            />
+            >
+              <option value="">Select condition</option>
+              <option value="new">New</option>
+              <option value="used">Used</option>
+            </select>
           </div>
 
           <div className="field">

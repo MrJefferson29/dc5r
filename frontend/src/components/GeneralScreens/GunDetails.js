@@ -8,6 +8,8 @@ import { FiMail, FiHeart, FiArrowLeft, FiEdit3, FiInfo, FiCheck } from "react-ic
 import { AuthContext } from "../../Context/AuthContext";
 import axios from "axios";
 
+const api = axios.create({ baseURL: "http://localhost:5000/api" });
+
 const sliderSettings = {
   dots: true,
   infinite: false,
@@ -27,21 +29,21 @@ export default function PartDetails() {
   const { activeUser } = useContext(AuthContext);
   const navigate = useNavigate();
   
-  // 'name' here is the slug from your App.js route (e.g., /pet/:name)
-  const { name } = useParams();
+  // Route param is the slug (may be encoded if it contained / or other chars)
+  const { name: slugParam } = useParams();
 
   useEffect(() => {
     const fetchDetails = async () => {
+      if (!slugParam) return;
       setLoading(true);
       try {
-        // Fetching by slug as defined in your Mongoose schema
-        const { data } = await axios.get(`https://dc5r.onrender.com/api/horses/${name}`);
+        const { data } = await api.get(`/horses/${encodeURIComponent(slugParam)}`);
         
         if (data) {
           setItem(data);
 
           // Fetch related items safely using the category from the returned item
-          const allRes = await axios.get("https://dc5r.onrender.com/api/horses");
+          const allRes = await api.get("/horses");
           const all = Array.isArray(allRes.data) ? allRes.data : [];
           
           const related = all.filter(
@@ -59,7 +61,7 @@ export default function PartDetails() {
       }
     };
     fetchDetails();
-  }, [name]);
+  }, [slugParam]);
 
   const handleEmailClick = () => {
     if (!item) return;
@@ -103,7 +105,9 @@ export default function PartDetails() {
 
         <div className="content-section">
           <div className="header-flex">
-            <span className="category-label">{item.category}</span>
+            <span className="category-label">
+              {item.subcategory ? `${item.category} · ${item.subcategory}` : item.category}
+            </span>
             <h1 className="item-name">{item.name}</h1>
             <div className="price-tag">{item.price}</div>
           </div>
@@ -116,16 +120,26 @@ export default function PartDetails() {
 
           <div className="specs-table">
             <div className="row">
-              <span className="label">Component</span>
-              <span className="value">{item.componentType}</span>
+              <span className="label">Category</span>
+              <span className="value">{item.category}</span>
             </div>
+            {item.subcategory && (
+              <div className="row">
+                <span className="label">Subcategory</span>
+                <span className="value">{item.subcategory}</span>
+              </div>
+            )}
             <div className="row">
               <span className="label">Condition</span>
               <span className="value">{item.condition}</span>
             </div>
             <div className="row">
               <span className="label">Fitment</span>
-              <span className="value">DC5 / RSX / EP3</span>
+              <span className="value">
+                {Array.isArray(item.fits) && item.fits.length > 0
+                  ? item.fits.join(" · ")
+                  : "—"}
+              </span>
             </div>
           </div>
 
@@ -146,7 +160,7 @@ export default function PartDetails() {
           </div>
 
           {activeUser && (
-            <button className="admin-edit-btn" onClick={() => navigate(`/pet/${name}/edit`)}>
+            <button className="admin-edit-btn" onClick={() => navigate(`/pet/${encodeURIComponent(slugParam)}/edit`)}>
               <FiEdit3 /> Edit Technical Record
             </button>
           )}
@@ -158,7 +172,7 @@ export default function PartDetails() {
           <h3>Complementary Parts</h3>
           <div className="related-grid">
             {relatedItems.map((ri, i) => (
-              <Link key={i} to={`/pet/${ri.slug}`} className="related-card">
+              <Link key={i} to={`/pet/${encodeURIComponent(ri.slug)}`} className="related-card">
                 <img src={ri.images?.[0]} alt={ri.name} />
                 <div className="related-info">
                   <h4>{ri.name}</h4>

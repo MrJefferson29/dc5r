@@ -4,6 +4,7 @@ import { List, X } from 'react-bootstrap-icons';
 import Offcanvas from 'react-bootstrap/Offcanvas';
 import styled from 'styled-components';
 import { AuthContext } from '../../Context/AuthContext';
+import { INVENTORY_MAIN_CATEGORIES } from '../../constants/inventoryCategories';
 
 function Navbar() {
   const [show, setShow] = useState(false);
@@ -37,15 +38,21 @@ function Navbar() {
           <NavGroup>
             <NavLabel>Navigation</NavLabel>
             <NavItem onClick={() => handleNavigate('/')}>Home</NavItem>
-            <NavItem onClick={() => handleNavigate('/all-pets')}>Inventory</NavItem>
+            <NavItem onClick={() => handleNavigate('/all-pets')}>Inventory (All)</NavItem>
             <NavItem onClick={() => handleNavigate('/about')}>Technical Specs</NavItem>
+            <NavItem onClick={() => handleNavigate('/contact-us')}>Support Desk</NavItem>
           </NavGroup>
 
           <NavGroup>
-            <NavLabel>Collection</NavLabel>
-            <NavItem onClick={() => handleNavigate('/all-pets?category=interior')}>Interior Components</NavItem>
-            <NavItem onClick={() => handleNavigate('/all-pets?category=exterior')}>Exterior Aero</NavItem>
-            <NavItem onClick={() => handleNavigate('/contact-us')}>Support Desk</NavItem>
+            <NavLabel>Inventory by category</NavLabel>
+            {INVENTORY_MAIN_CATEGORIES.map((cat) => (
+              <NavItem
+                key={cat}
+                onClick={() => handleNavigate(`/all-pets?category=${encodeURIComponent(cat)}`)}
+              >
+                {cat}
+              </NavItem>
+            ))}
           </NavGroup>
 
           {activeUser && (

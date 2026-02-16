@@ -63,6 +63,7 @@ router.post("/", auth, upload.array("images", 6), async (req, res) => {
     const {
       name,
       category,
+      subcategory,
       views,
       price,
       description,
@@ -71,8 +72,16 @@ router.post("/", auth, upload.array("images", 6), async (req, res) => {
       fits
     } = req.body;
 
-    if (!name || !category || !price || !componentType || !condition) {
+    if (!name || !category || !price || !condition) {
       return res.status(400).json({ message: "Missing required fields" });
+    }
+    const needsSubcategory = category && category !== "Carbon fiber parts";
+    if (needsSubcategory && !subcategory) {
+      return res.status(400).json({ message: "Subcategory is required for this category" });
+    }
+    const conditionNormalized = String(condition).toLowerCase().trim();
+    if (conditionNormalized !== "new" && conditionNormalized !== "used") {
+      return res.status(400).json({ message: "Condition must be 'new' or 'used'" });
     }
 
     const files = req.files || [];
@@ -101,11 +110,12 @@ router.post("/", auth, upload.array("images", 6), async (req, res) => {
     const horse = await Horse.create({
       name,
       category,
+      subcategory: subcategory || "",
       views: views ? Number(views) : 0,
       price,
       description,
-      componentType,
-      condition,
+      componentType: componentType || "",
+      condition: conditionNormalized,
       fits: fitsArray,
       images: imageUrls,
     });
@@ -124,6 +134,7 @@ router.put("/:slug", auth, upload.array("images", 6), async (req, res) => {
     const {
       name,
       category,
+      subcategory,
       views,
       price,
       description,
@@ -140,12 +151,18 @@ router.put("/:slug", auth, upload.array("images", 6), async (req, res) => {
     // Update basic fields if provided
     if (name) horse.name = name;
     if (category) horse.category = category;
+    if (typeof subcategory !== "undefined") horse.subcategory = subcategory || "";
     if (typeof views !== "undefined") horse.views = Number(views);
     if (price) horse.price = price;
     if (typeof description !== "undefined") horse.description = description;
 
     if (componentType) horse.componentType = componentType;
-    if (condition) horse.condition = condition;
+    if (condition) {
+      const conditionNormalizedPut = String(condition).toLowerCase().trim();
+      if (conditionNormalizedPut === "new" || conditionNormalizedPut === "used") {
+        horse.condition = conditionNormalizedPut;
+      }
+    }
 
     // Normalise fits updates
     if (typeof fits !== "undefined") {
