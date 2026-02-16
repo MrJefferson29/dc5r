@@ -17,7 +17,7 @@ const Register = () => {
     const password = e.target.password.value;
 
     try {
-      const { data } = await api.post("http://localhost:5000/api/auth/register", {
+      const { data } = await api.post("https://dc5r.onrender.com/api/auth/register", {
         name,
         email,
         password,

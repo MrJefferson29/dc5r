@@ -16,7 +16,7 @@ const Login = () => {
     const password = e.target.password.value;
 
     try {
-      const { data } = await api.post('http://localhost:5000/api/auth/login', { email, password });
+      const { data } = await api.post('https://dc5r.onrender.com/api/auth/login', { email, password });
 
       if (data && data.token) {
         localStorage.setItem("authToken", data.token);

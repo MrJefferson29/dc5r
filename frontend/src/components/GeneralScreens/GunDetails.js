@@ -8,7 +8,7 @@ import { FiMail, FiHeart, FiArrowLeft, FiEdit3, FiInfo, FiCheck } from "react-ic
 import { AuthContext } from "../../Context/AuthContext";
 import axios from "axios";
 
-const api = axios.create({ baseURL: "http://localhost:5000/api" });
+const api = axios.create({ baseURL: "https://dc5r.onrender.com/api" });
 
 const sliderSettings = {
   dots: true,
