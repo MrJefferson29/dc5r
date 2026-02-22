@@ -1,31 +1,18 @@
 import React, { useState, useEffect, useContext } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import styled from "styled-components";
-import Slider from "react-slick";
-import "slick-carousel/slick/slick.css";
-import "slick-carousel/slick/slick-theme.css";
-import { FiMail, FiHeart, FiArrowLeft, FiEdit3, FiInfo, FiCheck } from "react-icons/fi";
+import { FiMail, FiHeart, FiArrowLeft, FiEdit3, FiChevronLeft, FiChevronRight, FiInfo, FiCheck } from "react-icons/fi";
 import { AuthContext } from "../../Context/AuthContext";
 import axios from "axios";
 
 const api = axios.create({ baseURL: "https://dc5r.onrender.com/api" });
-
-const sliderSettings = {
-  dots: true,
-  infinite: false,
-  speed: 500,
-  slidesToShow: 1,
-  slidesToScroll: 1,
-  autoplay: false,
-  fade: true,
-  adaptiveHeight: true 
-};
 
 export default function PartDetails() {
   const [like, setLike] = useState(false);
   const [item, setItem] = useState(null);
   const [relatedItems, setRelatedItems] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const { activeUser } = useContext(AuthContext);
   const navigate = useNavigate();
   
@@ -41,6 +28,7 @@ export default function PartDetails() {
         
         if (data) {
           setItem(data);
+          setCurrentImageIndex(0);
 
           // Fetch related items safely using the category from the returned item
           const allRes = await api.get("/horses");
@@ -91,13 +79,48 @@ export default function PartDetails() {
       <div className="main-layout">
         <div className="gallery-section">
           {item.images && item.images.length > 0 ? (
-            <Slider {...sliderSettings}>
-              {item.images.map((img, i) => (
-                <div key={i} className="slide">
-                  <img src={img} alt={item.name} />
+            <>
+              <div className="main-image-wrap">
+                {item.images.length > 1 && (
+                  <>
+                    <button
+                      type="button"
+                      className="nav-btn prev"
+                      onClick={() => setCurrentImageIndex((i) => (i === 0 ? item.images.length - 1 : i - 1))}
+                      aria-label="Previous image"
+                    >
+                      <FiChevronLeft />
+                    </button>
+                    <button
+                      type="button"
+                      className="nav-btn next"
+                      onClick={() => setCurrentImageIndex((i) => (i === item.images.length - 1 ? 0 : i + 1))}
+                      aria-label="Next image"
+                    >
+                      <FiChevronRight />
+                    </button>
+                  </>
+                )}
+                <img
+                  src={item.images[currentImageIndex]}
+                  alt={`${item.name} - ${currentImageIndex + 1} of ${item.images.length}`}
+                />
+              </div>
+              <div className="thumbnails-wrap">
+                <div className="thumbnails-scroll">
+                  {item.images.map((img, i) => (
+                    <button
+                      key={i}
+                      type="button"
+                      className={`thumb ${i === currentImageIndex ? "active" : ""}`}
+                      onClick={() => setCurrentImageIndex(i)}
+                    >
+                      <img src={img} alt="" />
+                    </button>
+                  ))}
                 </div>
-              ))}
-            </Slider>
+              </div>
+            </>
           ) : (
             <div className="no-image">No Images Available</div>
           )}
@@ -209,16 +232,87 @@ const DetailsStyles = styled.div`
   .gallery-section {
     background: #fff;
     border: 1px solid #eee;
-    overflow: hidden; /* Critical for slider overflow */
-    
-    img {
-      width: 100%;
-      height: auto;
-      max-height: 550px;
-      object-fit: contain;
+    overflow: hidden;
+
+    .main-image-wrap {
+      position: relative;
+      background: #fafafa;
       padding: 20px;
-      display: block;
-      margin: 0 auto;
+      min-height: 280px;
+
+      img {
+        width: 100%;
+        height: auto;
+        max-height: 500px;
+        object-fit: contain;
+        display: block;
+        margin: 0 auto;
+      }
+
+      .nav-btn {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 48px;
+        height: 48px;
+        border: none;
+        background: rgba(0,0,0,0.6);
+        color: #fff;
+        font-size: 1.5rem;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: background 0.2s;
+        z-index: 2;
+        &:hover { background: #cc0000; }
+        &.prev { left: 10px; }
+        &.next { right: 10px; }
+      }
+    }
+
+    .thumbnails-wrap {
+      border-top: 1px solid #eee;
+      padding: 12px;
+      background: #fff;
+    }
+
+    .thumbnails-scroll {
+      display: flex;
+      gap: 10px;
+      overflow-x: auto;
+      overflow-y: hidden;
+      padding-bottom: 6px;
+      -webkit-overflow-scrolling: touch;
+      &::-webkit-scrollbar { height: 6px; }
+      &::-webkit-scrollbar-thumb { background: #ccc; border-radius: 3px; }
+
+      .thumb {
+        flex: 0 0 80px;
+        width: 80px;
+        height: 80px;
+        padding: 0;
+        border: 2px solid #eee;
+        background: #fafafa;
+        cursor: pointer;
+        overflow: hidden;
+        transition: border-color 0.2s;
+        &.active { border-color: #cc0000; }
+        &:hover { border-color: #999; }
+        img {
+          width: 100%;
+          height: 100%;
+          object-fit: contain;
+        }
+      }
+    }
+
+    .no-image {
+      padding: 80px 20px;
+      text-align: center;
+      color: #999;
+      font-weight: 700;
+      text-transform: uppercase;
     }
   }
 
